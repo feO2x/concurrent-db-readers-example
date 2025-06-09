@@ -12,7 +12,7 @@ public sealed class OutboxItem
     
     public required DateTime CreatedAtUtc { get; init; }
     
-    public DateTime? ProcessedAtUtc { get; init; }
+    public DateTime? ProcessedAtUtc { get; set; }
     
-    public string? ProcessedBy { get; init; }
+    public string? ProcessedBy { get; set; }
 }

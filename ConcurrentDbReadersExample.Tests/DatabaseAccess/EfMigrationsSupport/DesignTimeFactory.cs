@@ -1,8 +1,7 @@
 using System;
 using Light.GuardClauses;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Serilog.Extensions.Logging;
+using Serilog;
 
 namespace ConcurrentDbReadersExample.Tests.DatabaseAccess.EfMigrationsSupport;
 
@@ -10,13 +9,12 @@ public static class DesignTimeFactory
 {
     public static TDbContext CreateDbContext<TDbContext>(
         string providerName,
-        Func<DbContextOptionsBuilder<TDbContext>, string, TDbContext> createDbContext,
+        Func<string, ILogger, TDbContext> createDbContext,
         string[] args
     )
         where TDbContext : AppDbContext
     {
         var logger = DesignTimeCompositionRoot.CreateDesignTimeLogger();
-        var loggerFactory = new SerilogLoggerFactory(logger);
         var configuration = DesignTimeCompositionRoot.CreateDesignTimeConfiguration(args);
         var connectionString = configuration.GetConnectionString(providerName);
         if (connectionString.IsNullOrWhiteSpace())
@@ -33,7 +31,6 @@ public static class DesignTimeFactory
             );
         }
 
-        var optionsBuilder = new DbContextOptionsBuilder<TDbContext>().UseLoggerFactory(loggerFactory);
-        return createDbContext(optionsBuilder, connectionString);
+        return createDbContext(connectionString, logger);
     }
 }

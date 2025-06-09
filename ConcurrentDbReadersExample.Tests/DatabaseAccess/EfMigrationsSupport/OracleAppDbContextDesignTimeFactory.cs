@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace ConcurrentDbReadersExample.Tests.DatabaseAccess.EfMigrationsSupport;
@@ -7,14 +6,5 @@ namespace ConcurrentDbReadersExample.Tests.DatabaseAccess.EfMigrationsSupport;
 public sealed class OracleAppDbContextDesignTimeFactory : IDesignTimeDbContextFactory<OracleAppDbContext>
 {
     public OracleAppDbContext CreateDbContext(string[] args) =>
-        DesignTimeFactory.CreateDbContext<OracleAppDbContext>(
-            "oracle",
-            (optionsBuilder, connectionString) => new (
-                optionsBuilder
-                   .UseOracle(connectionString)
-                   .UseUpperSnakeCaseNamingConvention()
-                   .Options
-            ),
-            args
-        );
+        DesignTimeFactory.CreateDbContext("oracle", OracleAppDbContext.Create, args);
 }

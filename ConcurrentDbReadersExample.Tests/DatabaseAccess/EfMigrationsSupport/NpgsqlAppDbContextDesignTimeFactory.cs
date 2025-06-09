@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace ConcurrentDbReadersExample.Tests.DatabaseAccess.EfMigrationsSupport;
@@ -7,14 +6,5 @@ namespace ConcurrentDbReadersExample.Tests.DatabaseAccess.EfMigrationsSupport;
 public sealed class NpgsqlAppDbContextDesignTimeFactory : IDesignTimeDbContextFactory<NpgsqlAppDbContext>
 {
     public NpgsqlAppDbContext CreateDbContext(string[] args) =>
-        DesignTimeFactory.CreateDbContext<NpgsqlAppDbContext>(
-            "postgres",
-            (optionsBuilder, connectionString) => new (
-                optionsBuilder
-                   .UseNpgsql(connectionString)
-                   .UseSnakeCaseNamingConvention()
-                   .Options
-            ),
-            args
-        );
+        DesignTimeFactory.CreateDbContext("postgres", NpgsqlAppDbContext.Create, args);
 }
