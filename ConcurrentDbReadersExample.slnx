@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+  </Configurations>
+  <Folder Name="/SolutionItems/">
+    <File Path=".config/dotnet-tools.json" />
+    <File Path="ConcurrentDbReadersExample.sln.DotSettings" />
+    <File Path=".gitignore" />
+    <File Path="compose.yaml" />
+  </Folder>
+  <Project Path="ConcurrentDbReadersExample.Tests/ConcurrentDbReadersExample.Tests.csproj" />
+</Solution>

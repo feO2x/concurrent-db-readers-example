@@ -1,0 +1,8 @@
+// These settings are only used for dotnet ef CLI commands. The actual tests will use Testcontainers which
+// won't be using the settings in this file.
+{
+  "ConnectionStrings": {
+    "oracle": "User Id=test;Password=testpassword;Data Source=localhost:1521/FREEPDB1",
+    "postgres": "Host=localhost;Port=5432;Database=concurrent_db_readers;Username=postgres;Password=postgres"
+  }
+}

@@ -1,0 +1,44 @@
+# This compose file creates containers for dotnet ef migration tools to work properly.
+# You don't need to start them for the actual test runs. They will use Testcontainers
+# which start up throwaway containers for the database servers.
+
+services:
+  postgres:
+    image: postgres:17.5
+    container_name: ConcurrentDbReaders_Postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: concurrent_db_readers
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  oracle:
+    image: gvenzl/oracle-free:23.5-slim-faststart
+    container_name: ConcurrentDbReaders_Oracle
+    environment:
+      ORACLE_PASSWORD: oracle
+      APP_USER: test
+      APP_USER_PASSWORD: testpassword
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
+    name: ConcurrentDbReaders_Postgres_Data
+  oracle_data:
+    name: ConcurrentDbReaders_Oracle_Data
