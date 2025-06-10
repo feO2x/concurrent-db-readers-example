@@ -24,17 +24,39 @@ public sealed class OracleOutboxItemsSession : EfSession<OracleAppDbContext>.Wit
 
         const string sql =
             """
-            BEGIN
-                OPEN :result_cursor FOR
-                    SELECT ID, TYPE, JSON_PAYLOAD, CREATED_AT_UTC, PROCESSED_AT_UTC, PROCESSED_BY
+            DECLARE
+                TYPE id_array_type IS TABLE OF RAW(16);
+                locked_ids id_array_type;
+                
+                CURSOR lock_cursor IS
+                    SELECT ID
                     FROM OUTBOX_ITEMS
                     WHERE PROCESSED_AT_UTC IS NULL
                     ORDER BY ID
                     FOR UPDATE SKIP LOCKED;
+            BEGIN
+                -- First cursor: Fetch IDs and acquire row locks incrementally
+                OPEN lock_cursor;
+                FETCH lock_cursor BULK COLLECT INTO locked_ids LIMIT :batch_size;
+                CLOSE lock_cursor;
+                
+                -- Second cursor: Return full data for the locked IDs
+                OPEN :result_cursor FOR
+                    SELECT ID, TYPE, JSON_PAYLOAD, CREATED_AT_UTC, PROCESSED_AT_UTC, PROCESSED_BY
+                    FROM OUTBOX_ITEMS
+                    WHERE ID IN (SELECT COLUMN_VALUE FROM TABLE(locked_ids))
+                    ORDER BY ID;
             END;
             """;
 
         var command = await CreateCommandAsync<OracleCommand>(sql, cancellationToken);
+
+        // Add batch size parameter
+        var batchSizeParameter = new OracleParameter("batch_size", OracleDbType.Int32)
+        {
+            Value = batchSize
+        };
+        command.Parameters.Add(batchSizeParameter);
 
         // Add the cursor parameter
         var cursorParameter = new OracleParameter("result_cursor", OracleDbType.RefCursor)
@@ -46,15 +68,13 @@ public sealed class OracleOutboxItemsSession : EfSession<OracleAppDbContext>.Wit
         // Execute the PL/SQL block
         await command.ExecuteNonQueryAsync(cancellationToken);
 
-        var results = new List<OutboxItem>();
+        var results = new List<OutboxItem>(batchSize);
 
         // Get the cursor from the output parameter and read from it
         var refCursor = (OracleRefCursor) cursorParameter.Value!;
         await using var reader = refCursor.GetDataReader();
 
-        // Only read up to batchSize rows - this is where the batching happens
-        var rowsRead = 0;
-        while (rowsRead < batchSize && await reader.ReadAsync(cancellationToken))
+        while (await reader.ReadAsync(cancellationToken))
         {
             var outboxItem = new OutboxItem
             {
@@ -67,8 +87,9 @@ public sealed class OracleOutboxItemsSession : EfSession<OracleAppDbContext>.Wit
             };
 
             results.Add(outboxItem);
-            DbContext.OutboxItems.Attach(outboxItem);
-            rowsRead++;
+
+            var dbContext = await GetDbContextAsync(cancellationToken);
+            dbContext.OutboxItems.Attach(outboxItem);
         }
 
         return results;
