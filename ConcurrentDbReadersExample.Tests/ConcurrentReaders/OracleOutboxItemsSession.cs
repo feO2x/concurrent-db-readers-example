@@ -25,8 +25,7 @@ public sealed class OracleOutboxItemsSession : EfSession<OracleAppDbContext>.Wit
         const string sql =
             """
             DECLARE
-                TYPE id_array_type IS TABLE OF RAW(16);
-                locked_ids id_array_type;
+                locked_ids ID_ARRAY_TYPE := ID_ARRAY_TYPE();
                 
                 CURSOR lock_cursor IS
                     SELECT ID
