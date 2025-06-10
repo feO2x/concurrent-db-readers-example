@@ -11,20 +11,20 @@ using Xunit;
 
 namespace ConcurrentDbReadersExample.Tests;
 
-[Collection(nameof(PostgresCollection))]
-public sealed class NpgsqlConcurrentReaderTests
+[Collection(nameof(OracleCollection))]
+public sealed class OracleConcurrentReaderTests
 {
     private const int BatchSize = 13;
-    private readonly PostgresFixture _fixture;
+    private readonly OracleFixture _fixture;
 
-    public NpgsqlConcurrentReaderTests(PostgresFixture fixture, ITestOutputHelper testOutput)
+    public OracleConcurrentReaderTests(OracleFixture fixture, ITestOutputHelper testOutput)
     {
         _fixture = fixture;
         _fixture.TestOutputSink.Inject(testOutput);
     }
-
+    
     [Fact]
-    public async Task PerformPostgresConcurrentReaderTests()
+    public async Task PerformOracleConcurrentReaderTests()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         await PrepareOutboxItemsAsync(100, cancellationToken);
@@ -65,7 +65,7 @@ public sealed class NpgsqlConcurrentReaderTests
             "There should not be too much difference between the number of outbox items per processor"
         );
     }
-
+    
     private async Task PrepareOutboxItemsAsync(int numberOfItems, CancellationToken cancellationToken = default)
     {
         numberOfItems.MustBeGreaterThan(0);
@@ -93,7 +93,7 @@ public sealed class NpgsqlConcurrentReaderTests
         new (
             processorId,
             BatchSize,
-            () => new NpgsqlOutboxItemsSession(_fixture.CreateDbContext()),
+            () => new OracleOutboxItemsSession(_fixture.CreateDbContext()),
             _fixture.Logger
         );
 }
