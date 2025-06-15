@@ -7,6 +7,8 @@
     <File Path="ConcurrentDbReadersExample.sln.DotSettings" />
     <File Path=".gitignore" />
     <File Path="compose.yaml" />
+    <File Path="run-postgres-tests.sh" />
+    <File Path="run-oracle-tests.sh" />
   </Folder>
   <Project Path="ConcurrentDbReadersExample.Tests/ConcurrentDbReadersExample.Tests.csproj" />
 </Solution>

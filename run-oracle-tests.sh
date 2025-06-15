@@ -1,0 +1,1 @@
+dotnet run -c Release --project ConcurrentDbReadersExample.Tests --filter-class "*OracleConcurrentReaderTests" --output Detailed      

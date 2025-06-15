@@ -1,0 +1,1 @@
+dotnet run -c Release --project ConcurrentDbReadersExample.Tests --filter-class "*NpgsqlConcurrentReaderTests" --output Detailed      
