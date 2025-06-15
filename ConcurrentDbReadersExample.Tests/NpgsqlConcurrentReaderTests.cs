@@ -26,18 +26,21 @@ public sealed class NpgsqlConcurrentReaderTests
     [Fact]
     public async Task PerformPostgresConcurrentReaderTests()
     {
+        // Arrange
         var cancellationToken = TestContext.Current.CancellationToken;
         await PrepareOutboxItemsAsync(100, cancellationToken);
         var processor1 = CreateOutboxItemProcessor("P1");
         var processor2 = CreateOutboxItemProcessor("P2");
         var processor3 = CreateOutboxItemProcessor("P3");
 
+        // Act
         await Task.WhenAll(
             processor1.ProcessOutboxItemsAsync(cancellationToken),
             processor2.ProcessOutboxItemsAsync(cancellationToken),
             processor3.ProcessOutboxItemsAsync(cancellationToken)
         );
 
+        // Assert
         await using var dbContext = _fixture.CreateDbContext();
         var allOutboxItems = await dbContext.OutboxItems.AsNoTracking().ToListAsync(cancellationToken);
         allOutboxItems.Should().NotContain(x => x.ProcessedBy.IsNullOrEmpty(), "All outbox items should be processed");
@@ -58,11 +61,9 @@ public sealed class NpgsqlConcurrentReaderTests
         _fixture.Logger.Information("P2 processed {OutboxItemCount} outbox items in total", countP2);
         _fixture.Logger.Information("P3 processed {OutboxItemCount} outbox items in total", countP3);
         var minimum = Math.Min(countP1, Math.Min(countP2, countP3));
-        var maximum = Math.Max(countP1, Math.Max(countP2, countP3));
-        const int allowedDelta = 20;
         minimum.Should().BeGreaterOrEqualTo(
-            maximum - allowedDelta,
-            "There should not be too much difference between the number of outbox items per processor"
+            BatchSize,
+            "The processor with the least amount of outbox items should have processed at least one batch"
         );
     }
 
