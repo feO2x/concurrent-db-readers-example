@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using ConcurrentDbReadersExample.Tests.DatabaseAccess;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Serilog.Core;
 using Serilog.Sinks.XUnit.Injectable;
 using Serilog.Sinks.XUnit.Injectable.Extensions;
 using Testcontainers.Oracle;
@@ -11,8 +12,10 @@ namespace ConcurrentDbReadersExample.Tests.Fixtures;
 
 public sealed class OracleFixture : IAsyncLifetime
 {
+    private readonly Logger _logger;
+    
     public OracleFixture() =>
-        Logger = new LoggerConfiguration()
+        _logger = new LoggerConfiguration()
            .WriteTo.InjectableTestOutput(TestOutputSink)
            .CreateLogger();
 
@@ -25,7 +28,7 @@ public sealed class OracleFixture : IAsyncLifetime
 
     public InjectableTestOutputSink TestOutputSink { get; } = new ();
 
-    public ILogger Logger { get; }
+    public ILogger Logger => _logger;
 
     public async ValueTask InitializeAsync()
     {
@@ -38,6 +41,7 @@ public sealed class OracleFixture : IAsyncLifetime
     {
         await OracleContainer.StopAsync();
         await OracleContainer.DisposeAsync();
+        await _logger.DisposeAsync();
     }
 
     public OracleAppDbContext CreateDbContext() =>

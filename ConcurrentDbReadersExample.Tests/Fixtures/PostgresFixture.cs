@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using ConcurrentDbReadersExample.Tests.DatabaseAccess;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Serilog.Core;
 using Serilog.Sinks.XUnit.Injectable;
 using Serilog.Sinks.XUnit.Injectable.Extensions;
 using Testcontainers.PostgreSql;
@@ -12,8 +13,9 @@ namespace ConcurrentDbReadersExample.Tests.Fixtures;
 // ReSharper disable once ClassNeverInstantiated.Global -- instantiated by the xunit runner
 public sealed class PostgresFixture : IAsyncLifetime
 {
+    private readonly Logger _logger;
     public PostgresFixture() =>
-        Logger = new LoggerConfiguration()
+        _logger = new LoggerConfiguration()
            .WriteTo.InjectableTestOutput(TestOutputSink)
            .CreateLogger();
 
@@ -26,7 +28,7 @@ public sealed class PostgresFixture : IAsyncLifetime
        .Build();
 
     public InjectableTestOutputSink TestOutputSink { get; } = new ();
-    public ILogger Logger { get; }
+    public ILogger Logger => _logger;
 
     public async ValueTask InitializeAsync()
     {
@@ -39,6 +41,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     {
         await PostgresContainer.StopAsync();
         await PostgresContainer.DisposeAsync();
+        await _logger.DisposeAsync();
     }
 
     public NpgsqlAppDbContext CreateDbContext() =>
